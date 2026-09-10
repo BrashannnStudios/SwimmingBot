@@ -13,13 +13,13 @@ EMBED_COLOR = 0xCEF3F1
 FOOTER_TEXT = "Swimming for Animals"
 
 EMOJIS = {
-    "reloj": "<:RelojEmoji:0>",
-    "reloj_arena": "<:RelojArenaEmoji:0>",
-    "pluma": "<:PlumaEmoji:0>",
-    "lupa": "<:Lupaemoji:0>",
-    "denegado": "<:DenegadoEmoji:0>",
-    "aviso": "<:AvisoEmoji:0>",
-    "aceptar": "<:Aceptar:0>",
+    "reloj": "<:RelojEmoji:1547702729571573860>",
+    "reloj_arena": "<:RelojArenaEmoji:1547702699489894551>",
+    "pluma": "<:PlumaEmoji:1547702668041125978>",
+    "lupa": "<:Lupaemoji:1547702641298247740>",
+    "<:DenegadoEmoji:1547702597320704050>",
+    "<:AvisoEmoji:1547702566350225500>",
+    "<:Aceptar:1547702532288028742>",
 }
 
 # ---------- Keep-alive Flask (para Render) ----------
