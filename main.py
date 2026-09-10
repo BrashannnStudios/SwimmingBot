@@ -10,16 +10,16 @@ DISCORD_TOKEN = os.environ["DISCORD_TOKEN"]
 MONGO_URI = os.environ["MONGO_URI"]
 
 EMBED_COLOR = 0xCEF3F1
-FOOTER_TEXT = "Dead by Bodrios"
+FOOTER_TEXT = "Swimming for Animals"
 
 EMOJIS = {
-    "reloj": "<:RelojEmoji:1547702729571573860>",
-    "reloj_arena": "<:RelojArenaEmoji:1547702699489894551>",
-    "pluma": "<:PlumaEmoji:1547702668041125978>",
-    "lupa": "<:Lupaemoji:1547702641298247740>",
-    "denegado": "<:DenegadoEmoji:1547702597320704050>",
-    "aviso": "<:AvisoEmoji:1547702566350225500>",
-    "aceptar": "<:Aceptar:1547702532288028742>",
+    "reloj": "<:RelojEmoji:0>",
+    "reloj_arena": "<:RelojArenaEmoji:0>",
+    "pluma": "<:PlumaEmoji:0>",
+    "lupa": "<:Lupaemoji:0>",
+    "denegado": "<:DenegadoEmoji:0>",
+    "aviso": "<:AvisoEmoji:0>",
+    "aceptar": "<:Aceptar:0>",
 }
 
 # ---------- Keep-alive Flask (para Render) ----------
@@ -28,7 +28,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Dead by Bodrios está vivo."
+    return "Swimming for Animals bot está vivo."
 
 
 def run_flask():
@@ -58,7 +58,7 @@ class DeadByBodrios(commands.Bot):
         self.db = self.mongo["dead_by_bodrios"]
         self.embed_color = EMBED_COLOR
         self.footer_text = FOOTER_TEXT
-        self.emojis = EMOJIS
+        self.custom_emojis = EMOJIS
 
         # Caches en memoria para no golpear Mongo en cada mensaje
         self.guild_config_cache = {}   # guild_id -> dict (bot-setup)
@@ -71,15 +71,13 @@ class DeadByBodrios(commands.Bot):
         await self.load_extension("presence")
         await self.load_extension("appeals")
 
-        # Registrar vistas persistentes (los cogs las registran en su cog_load,
-        # pero lo forzamos también acá por si el bot arrancó sin datos previos)
         try:
             await self.tree.sync()
         except Exception as e:
             print(f"Error sincronizando slash commands: {e}")
 
     async def on_ready(self):
-        print(f"[Dead by Bodrios] Conectado como {self.user} (ID: {self.user.id})")
+        print(f"[Swimming for Animals] Conectado como {self.user} (ID: {self.user.id})")
 
 
 bot = DeadByBodrios()
