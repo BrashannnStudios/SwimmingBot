@@ -2,7 +2,7 @@ import itertools
 import discord
 from discord.ext import commands, tasks
 
-STATUSES = ["↪ Dead by bodrios", "↪ Dev: Supskevv"]
+STATUSES = ["↪ Swimming for Animals", "↪ Dev: Supskevv"]
 
 
 class Presence(commands.Cog):
