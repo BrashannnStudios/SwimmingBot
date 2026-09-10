@@ -281,9 +281,9 @@ class BotCommands(commands.Cog):
         await self.bot.process_commands(message)
 
     # ---------- bot-setup ----------
-    @app_commands.command(name="bot-setup", description="Configura el bot: logs, roles de staff, automod.")
+      @app_commands.command(name="bot-setup", description="Configura el bot: logs, roles de staff, automod.")
     @app_commands.checks.has_permissions(administrator=True)
-    async def bot_setup(self, interaction: discord.Interaction):
+    async def botsetup_command(self, interaction: discord.Interaction):
         existing = await self.bot.db.guild_config.find_one({"guild_id": interaction.guild_id})
         state = BotConfigState(interaction.guild_id, existing)
         view = BotSetupView(self.bot, state)
