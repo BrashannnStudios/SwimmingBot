@@ -233,6 +233,9 @@ class BotCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        # OJO: este listener NO debe llamar a process_commands. discord.py ya
+        # procesa los comandos de prefijo automáticamente en su propio
+        # on_message interno; hacerlo acá también duplica cada comando.
         if message.author.bot or not message.guild:
             return
         config = self.bot.guild_config_cache.get(message.guild.id)
@@ -241,7 +244,6 @@ class BotCommands(commands.Cog):
             if config:
                 self.bot.guild_config_cache[message.guild.id] = config
         if not config:
-            await self.bot.process_commands(message)
             return
 
         staff_roles = set(config.get("staff_roles", [])) | set(config.get("admin_roles", []))
@@ -251,7 +253,6 @@ class BotCommands(commands.Cog):
             await message.delete()
             warning = await message.channel.send(f"{message.author.mention} no se permiten invitaciones de Discord aquí.")
             await warning.delete(delay=5)
-            await self.bot.process_commands(message)
             return
 
         if not is_staff and config.get("anti_flood", True):
@@ -271,8 +272,6 @@ class BotCommands(commands.Cog):
                     await message.channel.send(embed=mute_embed)
                 except discord.Forbidden:
                     pass
-
-        await self.bot.process_commands(message)
 
     @app_commands.command(name="bot-setup", description="Configura el bot: logs, roles de staff, automod.")
     @app_commands.checks.has_permissions(administrator=True)
