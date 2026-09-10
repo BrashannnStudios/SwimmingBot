@@ -17,9 +17,9 @@ EMOJIS = {
     "reloj_arena": "<:RelojArenaEmoji:1547702699489894551>",
     "pluma": "<:PlumaEmoji:1547702668041125978>",
     "lupa": "<:Lupaemoji:1547702641298247740>",
-    "<:DenegadoEmoji:1547702597320704050>",
-    "<:AvisoEmoji:1547702566350225500>",
-    "<:Aceptar:1547702532288028742>",
+    "denegado":"<:DenegadoEmoji:1547702597320704050>",
+    "aviso": "<:AvisoEmoji:1547702566350225500>",
+    "aceptar": "<:Aceptar:1547702532288028742>",
 }
 
 # ---------- Keep-alive Flask (para Render) ----------
