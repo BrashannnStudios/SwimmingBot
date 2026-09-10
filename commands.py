@@ -1,6 +1,5 @@
 import re
 import random
-import asyncio
 from datetime import timedelta, datetime, timezone
 
 import discord
@@ -50,8 +49,6 @@ async def dm_sanction(bot, member: discord.Member, guild: discord.Guild, action:
     except discord.Forbidden:
         pass
 
-
-# ---------- bot-setup Views ----------
 
 class BotConfigState:
     def __init__(self, guild_id: int, existing: dict | None):
@@ -144,12 +141,10 @@ class BotSetupView(discord.ui.View):
         }
         await self.bot.db.guild_config.update_one({"guild_id": self.state.guild_id}, {"$set": data}, upsert=True)
         self.bot.guild_config_cache[self.state.guild_id] = data
-        embed = discord.Embed(description=f"{self.bot.emojis['aceptar']} Configuración guardada.", color=self.bot.embed_color)
+        embed = discord.Embed(description=f"{self.bot.custom_emojis['aceptar']} Configuración guardada.", color=self.bot.embed_color)
         embed.set_footer(text=self.bot.footer_text)
         await interaction.response.edit_message(embed=embed, view=None)
 
-
-# ---------- Giveaway Views ----------
 
 class GiveawayJoinView(discord.ui.View):
     def __init__(self, giveaway_id: str):
@@ -236,7 +231,6 @@ class BotCommands(commands.Cog):
         async for gw in running:
             self.bot.add_view(GiveawayJoinView(str(gw["_id"])))
 
-    # ---------- Automod ----------
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -271,7 +265,7 @@ class BotCommands(commands.Cog):
                 try:
                     await message.channel.set_permissions(message.author, send_messages=False)
                     mute_embed = discord.Embed(
-                        description=f"{self.bot.emojis['aviso']} {message.author.mention} fue silenciado por flood.",
+                        description=f"{self.bot.custom_emojis['aviso']} {message.author.mention} fue silenciado por flood.",
                         color=self.bot.embed_color,
                     )
                     await message.channel.send(embed=mute_embed)
@@ -280,8 +274,7 @@ class BotCommands(commands.Cog):
 
         await self.bot.process_commands(message)
 
-    # ---------- bot-setup ----------
-      @app_commands.command(name="bot-setup", description="Configura el bot: logs, roles de staff, automod.")
+    @app_commands.command(name="bot-setup", description="Configura el bot: logs, roles de staff, automod.")
     @app_commands.checks.has_permissions(administrator=True)
     async def botsetup_command(self, interaction: discord.Interaction):
         existing = await self.bot.db.guild_config.find_one({"guild_id": interaction.guild_id})
@@ -290,7 +283,6 @@ class BotCommands(commands.Cog):
         embed = view.build_preview()
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    # ---------- Giveaways ----------
     @app_commands.command(name="giveaway-create", description="Crea un giveaway.")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.describe(duration="Ej: 30s, 5m, 2h, 1d, 1w", prize="Premio", winners="Cantidad de ganadores", description="Descripción opcional", channel="Canal donde se publica")
@@ -363,7 +355,6 @@ class BotCommands(commands.Cog):
     async def before_checker(self):
         await self.bot.wait_until_ready()
 
-    # ---------- Moderación ----------
     async def _log(self, guild: discord.Guild, embed: discord.Embed):
         config = self.bot.guild_config_cache.get(guild.id) or await self.bot.db.guild_config.find_one({"guild_id": guild.id})
         if config and config.get("log_channel_id"):
@@ -379,14 +370,14 @@ class BotCommands(commands.Cog):
     async def lock(self, ctx, channel: discord.TextChannel = None):
         channel = channel or ctx.channel
         await channel.set_permissions(ctx.guild.default_role, send_messages=False)
-        await ctx.send(f"{self.bot.emojis['denegado']} {channel.mention} bloqueado.")
+        await ctx.send(f"{self.bot.custom_emojis['denegado']} {channel.mention} bloqueado.")
 
     @commands.command(name="unlock")
     @commands.has_permissions(manage_channels=True)
     async def unlock(self, ctx, channel: discord.TextChannel = None):
         channel = channel or ctx.channel
         await channel.set_permissions(ctx.guild.default_role, send_messages=True)
-        await ctx.send(f"{self.bot.emojis['aceptar']} {channel.mention} desbloqueado.")
+        await ctx.send(f"{self.bot.custom_emojis['aceptar']} {channel.mention} desbloqueado.")
 
     @commands.command(name="ban")
     @commands.has_permissions(ban_members=True)
@@ -396,7 +387,7 @@ class BotCommands(commands.Cog):
             return
         await dm_sanction(self.bot, member, ctx.guild, "baneo", reason)
         await ctx.guild.ban(member, reason=reason)
-        await ctx.send(f"{self.bot.emojis['denegado']} {member} fue baneado. Razón: {reason}")
+        await ctx.send(f"{self.bot.custom_emojis['denegado']} {member} fue baneado. Razón: {reason}")
 
     @commands.command(name="tempban")
     @commands.has_permissions(ban_members=True)
@@ -414,14 +405,14 @@ class BotCommands(commands.Cog):
             "guild_id": ctx.guild.id, "user_id": member.id,
             "unban_at": datetime.now(timezone.utc) + timedelta(seconds=seconds),
         })
-        await ctx.send(f"{self.bot.emojis['denegado']} {member} fue baneado temporalmente por {duration}.")
+        await ctx.send(f"{self.bot.custom_emojis['denegado']} {member} fue baneado temporalmente por {duration}.")
 
     @commands.command(name="unban")
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, user_id: int, *, reason: str = "No especificada"):
         try:
             await ctx.guild.unban(discord.Object(id=user_id), reason=reason)
-            await ctx.send(f"{self.bot.emojis['aceptar']} Usuario `{user_id}` desbaneado.")
+            await ctx.send(f"{self.bot.custom_emojis['aceptar']} Usuario `{user_id}` desbaneado.")
         except discord.NotFound:
             await ctx.send("Ese usuario no está baneado.")
 
@@ -433,7 +424,7 @@ class BotCommands(commands.Cog):
             return
         await dm_sanction(self.bot, member, ctx.guild, "expulsión", reason)
         await member.kick(reason=reason)
-        await ctx.send(f"{self.bot.emojis['denegado']} {member} fue expulsado. Razón: {reason}")
+        await ctx.send(f"{self.bot.custom_emojis['denegado']} {member} fue expulsado. Razón: {reason}")
 
     @commands.command(name="mute")
     @commands.has_permissions(moderate_members=True)
@@ -447,13 +438,13 @@ class BotCommands(commands.Cog):
             return
         await member.timeout(timedelta(seconds=seconds), reason=reason)
         await dm_sanction(self.bot, member, ctx.guild, "mute", reason, duration)
-        await ctx.send(f"{self.bot.emojis['reloj']} {member} muteado por {duration}. Razón: {reason}")
+        await ctx.send(f"{self.bot.custom_emojis['reloj']} {member} muteado por {duration}. Razón: {reason}")
 
     @commands.command(name="unmute")
     @commands.has_permissions(moderate_members=True)
     async def unmute(self, ctx, member: discord.Member):
         await member.timeout(None)
-        await ctx.send(f"{self.bot.emojis['aceptar']} {member} desmuteado.")
+        await ctx.send(f"{self.bot.custom_emojis['aceptar']} {member} desmuteado.")
 
     @commands.command(name="timeout")
     @commands.has_permissions(moderate_members=True)
@@ -475,7 +466,7 @@ class BotCommands(commands.Cog):
             "reason": reason, "moderator_id": ctx.author.id, "created_at": datetime.now(timezone.utc),
         })
         await dm_sanction(self.bot, member, ctx.guild, "advertencia", reason)
-        await ctx.send(f"{self.bot.emojis['aviso']} {member} advertido (ID #{warn_id}). Razón: {reason}")
+        await ctx.send(f"{self.bot.custom_emojis['aviso']} {member} advertido (ID #{warn_id}). Razón: {reason}")
 
     @commands.command(name="warnings")
     async def warnings_cmd(self, ctx, member: discord.Member):
@@ -495,7 +486,7 @@ class BotCommands(commands.Cog):
     async def delwarn(self, ctx, member: discord.Member, warn_id: int):
         result = await self.bot.db.warns.delete_one({"guild_id": ctx.guild.id, "user_id": member.id, "warn_id": warn_id})
         if result.deleted_count:
-            await ctx.send(f"{self.bot.emojis['aceptar']} Warn #{warn_id} eliminado.")
+            await ctx.send(f"{self.bot.custom_emojis['aceptar']} Warn #{warn_id} eliminado.")
         else:
             await ctx.send("No se encontró ese warn.")
 
@@ -506,7 +497,7 @@ class BotCommands(commands.Cog):
             {"guild_id": ctx.guild.id, "user_id": member.id, "warn_id": warn_id}, {"$set": {"reason": new_reason}}
         )
         if result.matched_count:
-            await ctx.send(f"{self.bot.emojis['aceptar']} Razón del warn #{warn_id} actualizada.")
+            await ctx.send(f"{self.bot.custom_emojis['aceptar']} Razón del warn #{warn_id} actualizada.")
         else:
             await ctx.send("No se encontró ese warn.")
 
@@ -542,7 +533,7 @@ class BotCommands(commands.Cog):
     async def delnote(self, ctx, member: discord.Member, note_id: int):
         result = await self.bot.db.notes.delete_one({"guild_id": ctx.guild.id, "user_id": member.id, "note_id": note_id})
         if result.deleted_count:
-            await ctx.send(f"{self.bot.emojis['aceptar']} Nota #{note_id} eliminada.")
+            await ctx.send(f"{self.bot.custom_emojis['aceptar']} Nota #{note_id} eliminada.")
         else:
             await ctx.send("No se encontró esa nota.")
 
@@ -551,16 +542,15 @@ class BotCommands(commands.Cog):
     async def slowmode(self, ctx, seconds: int, channel: discord.TextChannel = None):
         channel = channel or ctx.channel
         await channel.edit(slowmode_delay=seconds)
-        await ctx.send(f"{self.bot.emojis['reloj_arena']} Slowmode de {seconds}s aplicado en {channel.mention}.")
+        await ctx.send(f"{self.bot.custom_emojis['reloj_arena']} Slowmode de {seconds}s aplicado en {channel.mention}.")
 
     @commands.command(name="clear")
     @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx, amount: int):
         deleted = await ctx.channel.purge(limit=amount + 1)
-        msg = await ctx.send(f"{self.bot.emojis['aceptar']} Se eliminaron {len(deleted) - 1} mensajes.")
+        msg = await ctx.send(f"{self.bot.custom_emojis['aceptar']} Se eliminaron {len(deleted) - 1} mensajes.")
         await msg.delete(delay=4)
 
-    # ---------- Utilidad ----------
     @commands.command(name="dm")
     @commands.has_permissions(manage_guild=True)
     async def dm_cmd(self, ctx, member: discord.Member, *, content: str):
@@ -576,19 +566,19 @@ class BotCommands(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def addrole(self, ctx, member: discord.Member, role: discord.Role):
         await member.add_roles(role)
-        await ctx.send(f"{self.bot.emojis['aceptar']} Rol {role.mention} agregado a {member}.")
+        await ctx.send(f"{self.bot.custom_emojis['aceptar']} Rol {role.mention} agregado a {member}.")
 
     @commands.command(name="removerole")
     @commands.has_permissions(manage_roles=True)
     async def removerole(self, ctx, member: discord.Member, role: discord.Role):
         await member.remove_roles(role)
-        await ctx.send(f"{self.bot.emojis['aceptar']} Rol {role.mention} removido de {member}.")
+        await ctx.send(f"{self.bot.custom_emojis['aceptar']} Rol {role.mention} removido de {member}.")
 
     @commands.command(name="nick")
     @commands.has_permissions(manage_nicknames=True)
     async def nick(self, ctx, member: discord.Member, *, new_nick: str = None):
         await member.edit(nick=new_nick)
-        await ctx.send(f"{self.bot.emojis['aceptar']} Apodo de {member} actualizado.")
+        await ctx.send(f"{self.bot.custom_emojis['aceptar']} Apodo de {member} actualizado.")
 
     @commands.command(name="userinfo")
     async def userinfo(self, ctx, member: discord.Member = None):
@@ -604,7 +594,7 @@ class BotCommands(commands.Cog):
 
     @commands.command(name="cmds")
     async def cmds(self, ctx):
-        embed = discord.Embed(title="Comandos de Dead by Bodrios", color=self.bot.embed_color)
+        embed = discord.Embed(title="Comandos de Swimming for Animals", color=self.bot.embed_color)
         embed.add_field(
             name="Moderación",
             value="lock, unlock, ban, tempban, unban, kick, mute, unmute, timeout, warn, warnings, delwarn, editreason, note, viewnotes, delnote, slowmode, clear",
