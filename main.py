@@ -70,6 +70,7 @@ class DeadByBodrios(commands.Bot):
         await self.load_extension("tickets")
         await self.load_extension("presence")
         await self.load_extension("appeals")
+        await self.load_extension("errors")
 
         try:
             await self.tree.sync()
