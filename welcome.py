@@ -23,8 +23,6 @@ def build_welcome_embed(bot, config: dict, member: discord.Member) -> discord.Em
 
 
 class WelcomeConfigState:
-    """Estado temporal mientras el staff configura el panel de bienvenida."""
-
     def __init__(self, guild_id: int, existing: dict | None):
         self.guild_id = guild_id
         self.channel_id = existing.get("channel_id") if existing else None
@@ -40,7 +38,8 @@ class MessageModal(discord.ui.Modal, title="Mensaje de bienvenida"):
         super().__init__()
         self.view_ref = view
         self.message_input = discord.ui.TextInput(
-            label="Mensaje (usa {user} {username} {server} {membercount})",
+            label="Mensaje de bienvenida",
+            placeholder="Variables disponibles: {user} {username} {server} {membercount}",
             style=discord.TextStyle.paragraph,
             default=view.state.message,
             max_length=1000,
@@ -208,7 +207,7 @@ class WelcomeSetupView(discord.ui.View):
             {"guild_id": self.state.guild_id}, {"$set": data}, upsert=True
         )
         embed = discord.Embed(
-            description=f"{self.bot.emojis['aceptar']} Configuración de bienvenida guardada correctamente.",
+            description=f"{self.bot.custom_emojis['aceptar']} Configuración de bienvenida guardada correctamente.",
             color=self.bot.embed_color,
         )
         embed.set_footer(text=self.bot.footer_text)
