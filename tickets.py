@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import io
 
 TICKET_OPEN_CUSTOM_ID = "dbb_ticket_open"
 TICKET_SELECT_CUSTOM_ID = "dbb_ticket_select"
@@ -14,7 +13,8 @@ class TicketConfigState:
         self.panel_channel_id = existing.get("panel_channel_id") if existing else None
         self.panel_message = existing.get("panel_message", "Abre un ticket seleccionando una categoría abajo.") if existing else "Abre un ticket seleccionando una categoría abajo."
         self.categories = existing.get("categories", ["Soporte General"]) if existing else ["Soporte General"]
-        self.open_type = existing.get("open_type", "select") if existing else "select"  # "select" o "buttons"
+        self.open_type = existing.get("open_type", "select") if existing else "select"
+        self.image = existing.get("image") if existing else None
 
 
 class TicketCategoryModal(discord.ui.Modal, title="Categorías de tickets"):
@@ -50,6 +50,21 @@ class TicketPanelMessageModal(discord.ui.Modal, title="Mensaje del panel"):
 
     async def on_submit(self, interaction: discord.Interaction):
         self.view_ref.state.panel_message = self.message_input.value
+        await self.view_ref.refresh(interaction)
+
+
+class TicketImageModal(discord.ui.Modal, title="Imagen del panel"):
+    def __init__(self, view: "TicketSetupView"):
+        super().__init__()
+        self.view_ref = view
+        self.image_input = discord.ui.TextInput(
+            label="URL de la imagen", required=False, max_length=500,
+            default=view.state.image or "",
+        )
+        self.add_item(self.image_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        self.view_ref.state.image = self.image_input.value or None
         await self.view_ref.refresh(interaction)
 
 
@@ -120,6 +135,8 @@ class TicketSetupView(discord.ui.View):
         )
         embed.add_field(name="Tipo de apertura", value=self.state.open_type, inline=False)
         embed.add_field(name="Categorías de tickets", value=", ".join(self.state.categories), inline=False)
+        if self.state.image:
+            embed.set_image(url=self.state.image)
         embed.set_footer(text=self.bot.footer_text)
         return embed
 
@@ -138,6 +155,10 @@ class TicketSetupView(discord.ui.View):
     async def edit_panel_message(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(TicketPanelMessageModal(self))
 
+    @discord.ui.button(label="Editar imagen", style=discord.ButtonStyle.secondary, row=3)
+    async def edit_image(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(TicketImageModal(self))
+
     @discord.ui.button(label="Guardar y enviar panel", style=discord.ButtonStyle.success, row=4)
     async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not self.state.category_id or not self.state.panel_channel_id:
@@ -151,6 +172,7 @@ class TicketSetupView(discord.ui.View):
             "panel_message": self.state.panel_message,
             "categories": self.state.categories,
             "open_type": self.state.open_type,
+            "image": self.state.image,
         }
         await self.bot.db.ticket_config.update_one(
             {"guild_id": self.state.guild_id}, {"$set": data}, upsert=True
@@ -161,11 +183,13 @@ class TicketSetupView(discord.ui.View):
             description=self.state.panel_message,
             color=self.bot.embed_color,
         )
+        if self.state.image:
+            panel_embed.set_image(url=self.state.image)
         panel_embed.set_footer(text=self.bot.footer_text)
         panel_view = build_open_view(self.state.categories, self.state.open_type)
         await channel.send(embed=panel_embed, view=panel_view)
         confirm_embed = discord.Embed(
-            description=f"{self.bot.emojis['aceptar']} Configuración guardada y panel enviado en {channel.mention}.",
+            description=f"{self.bot.custom_emojis['aceptar']} Configuración guardada y panel enviado en {channel.mention}.",
             color=self.bot.embed_color,
         )
         confirm_embed.set_footer(text=self.bot.footer_text)
@@ -307,8 +331,6 @@ class Tickets(commands.Cog):
         self.bot = bot
 
     async def cog_load(self):
-        # Registrar vistas persistentes para paneles y tickets abiertos ya existentes
-        self.bot.add_view(discord.ui.View(timeout=None))  # placeholder seguro
         configs = self.bot.db.ticket_config.find({})
         async for config in configs:
             view = build_open_view(config.get("categories", []), config.get("open_type", "select"))
